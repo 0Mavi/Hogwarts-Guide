@@ -3,9 +3,6 @@
 
 Um aplicativo Flutter mágico e interativo inspirado no universo de **Harry Potter**, onde você pode conhecer mais sobre as casas de Hogwarts e tirar dúvidas com um assistente virtual encantado.
 
-![Capa do Projeto](./assets/preview1.png)
-![Mais Telas](./assets/preview2.png)
-
 ---
 
 ## ✨ Funcionalidades
