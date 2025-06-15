@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:guidehogwarts/data/house_data.dart';
 import 'package:guidehogwarts/models/house_model.dart';
-import 'package:guidehogwarts/screens/chat_screen.dart';
 import 'package:guidehogwarts/screens/house_detail_screen.dart';
 import 'package:guidehogwarts/screens/profile_screen.dart';
-import 'package:guidehogwarts/theme/app_colors.dart';
-import 'package:guidehogwarts/widgets/profile_wave_clipper.dart';
+import 'package:guidehogwarts/theme/app_colors.dart' ;
+
+import 'chat_screen.dart';
+
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -30,8 +31,8 @@ class MenuScreen extends StatelessWidget {
         ),
         // Logo centralizada
         title: Image.asset(
-          'assets/images/wand_logo.png', // IMPORTANTE: Adicione a imagem da varinha aqui
-          height: 20,
+          'assets/images/Vassoura.png',
+          height: 80,
           color: AppColors.brownie,
         ),
         centerTitle: true,
@@ -49,22 +50,12 @@ class MenuScreen extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 40),
         ],
       ),
       body: Stack(
         children: [
-          // Fundo de onda
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: ClipPath(
-              clipper: ProfileWaveClipper(),
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.4,
-                color: AppColors.caramel.withOpacity(0.4),
-              ),
-            ),
-          ),
+
           SafeArea(
             top: false,
             child: SingleChildScrollView(

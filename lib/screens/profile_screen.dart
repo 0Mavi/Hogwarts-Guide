@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:guidehogwarts/theme/app_colors.dart';
-import 'package:guidehogwarts/widgets/profile_wave_clipper.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -12,17 +12,7 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: AppColors.cream,
       body: Stack(
         children: [
-          // A forma de onda colorida no fundo
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: ClipPath(
-              clipper: ProfileWaveClipper(),
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.5,
-                color: AppColors.caramel.withOpacity(0.8),
-              ),
-            ),
-          ),
+
 
           // O conteúdo principal da tela
           SafeArea(

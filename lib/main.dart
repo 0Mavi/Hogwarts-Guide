@@ -16,7 +16,7 @@ class HogwartsGuideApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.brown,
         scaffoldBackgroundColor: AppColors.cream,
-        fontFamily: 'serif', // Usando uma fonte com serifa para um visual mais clássico.
+        fontFamily: 'serif',
       ),
       home: const WelcomeScreen(),
       debugShowCheckedModeBanner: false,

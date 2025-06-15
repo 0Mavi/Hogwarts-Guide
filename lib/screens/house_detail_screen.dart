@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:guidehogwarts/models/house_model.dart';
 import 'package:guidehogwarts/theme/app_colors.dart';
-import 'package:guidehogwarts/widgets/wavy_clipper.dart';
+
 
 class HouseDetailScreen extends StatelessWidget {
   final House house;
@@ -16,13 +16,7 @@ class HouseDetailScreen extends StatelessWidget {
         children: [
           // Cor de fundo base
           Container(color: AppColors.cream),
-          // A forma ondulada colorida
-          ClipPath(
-            clipper: WavyClipper(),
-            child: Container(
-              color: house.primaryColor.withOpacity(0.8),
-            ),
-          ),
+
           // Conteúdo da tela que rola
           SafeArea(
             child: SingleChildScrollView(

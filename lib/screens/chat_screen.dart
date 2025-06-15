@@ -1,15 +1,21 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:guidehogwarts/theme/app_colors.dart';
-import 'package:guidehogwarts/widgets/profile_wave_clipper.dart';
 
-// Uma classe modelo para representar uma mensagem
+
+// --- Models and Widgets ---
+
 class ChatMessage {
   final String text;
-  final bool isUser; // true se a mensagem for do usuário, false se for do bot
+  final bool isUser;
 
   ChatMessage({required this.text, required this.isUser});
 }
 
+// Definição do StatefulWidget
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -17,26 +23,150 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
+
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [
     ChatMessage(text: "Olá! Sou seu assistente mágico. Como posso ajudar sobre o mundo de Harry Potter?", isUser: false),
   ];
 
-  void _sendMessage() {
-    if (_controller.text.isNotEmpty) {
+  // Variáveis para controlar o estado da chamada da API e o nome do usuário
+  bool _isLoading = false;
+  String? _sessionId;
+  String? _userName;
+
+  @override
+  void initState() {
+    super.initState();
+    // Exibe o diálogo para pedir o nome do usuário assim que a tela for construída.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _promptForUserName(context);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Exibe um diálogo para o usuário inserir o nome.
+  Future<void> _promptForUserName(BuildContext context) async {
+    final nameController = TextEditingController();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // O usuário é obrigado a inserir um nome.
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppColors.cream,
+          title: const Text('Bem-vindo, bruxo(a)!', style: TextStyle(color: AppColors.brownie)),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(hintText: "Qual é o seu nome?"),
+            autofocus: true,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Confirmar', style: TextStyle(color: AppColors.brownie)),
+              onPressed: () {
+                final name = nameController.text;
+                if (name.isNotEmpty) {
+                  setState(() {
+                    _userName = name;
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Rola a lista de mensagens para o final.
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  /// Envia a mensagem do usuário para a API e processa a resposta.
+  Future<void> _sendMessage() async {
+    final text = _controller.text;
+    if (text.isEmpty || _isLoading) {
+      return;
+    }
+
+    setState(() {
+      _messages.add(ChatMessage(text: text, isUser: true));
+      _isLoading = true;
+    });
+
+    _controller.clear();
+    _scrollToBottom();
+
+    try {
+      final url = Uri.parse('https://dumblechatapi.onrender.com');
+      final headers = {'Content-Type': 'application/json; charset=UTF-8'};
+
+      // Usa o nome do usuário na primeira requisição.
+      final body = _sessionId == null
+          ? jsonEncode({'name': _userName, 'content': text})
+          : jsonEncode({'session_id': _sessionId, 'content': text});
+
+      final response = await http
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 20)); // Aumentado para 20s
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
+        final String botResponse = responseBody['resposta'];
+
+        setState(() {
+          if (responseBody['session_id'] != null) {
+            _sessionId = responseBody['session_id'];
+          }
+          _messages.add(ChatMessage(text: botResponse, isUser: false));
+        });
+      } else {
+        _messages.add(ChatMessage(text: "Oh, não! Minha coruja mensageira se perdeu. (Erro: ${response.statusCode})", isUser: false));
+      }
+    } on TimeoutException catch (_) {
+      _messages.add(ChatMessage(text: "A coruja demorou muito para responder. Verifique sua conexão e tente novamente.", isUser: false));
+    } on SocketException catch (_) {
+      _messages.add(ChatMessage(text: "Não consigo me conectar à rede dos bruxos. Verifique sua conexão com a internet.", isUser: false));
+    } catch (e) {
+      _messages.add(ChatMessage(text: "Parece que há uma interferência na rede mágica. Tente novamente mais tarde.", isUser: false));
+    } finally {
       setState(() {
-        _messages.add(ChatMessage(text: _controller.text, isUser: true));
-        // Aqui você adicionaria a lógica para obter uma resposta do "assistente"
-        // Por enquanto, vamos simular uma resposta automática.
-        _messages.add(ChatMessage(text: "Essa é uma ótima pergunta! Deixe-me consultar meus livros...", isUser: false));
+        _isLoading = false;
       });
-      _controller.clear();
+      _scrollToBottom();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Enquanto o nome do usuário não for fornecido, exibe uma tela de carregamento.
+    if (_userName == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.cream,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.brownie),
+        ),
+      );
+    }
+
+    // Constrói a tela de chat normal quando o nome do usuário já existe.
     return Scaffold(
       backgroundColor: AppColors.cream,
       appBar: AppBar(
@@ -47,22 +177,12 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Stack(
         children: [
-          // Fundo de onda
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: ClipPath(
-              clipper: ProfileWaveClipper(), // Reutilizando a onda do perfil
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.4,
-                color: AppColors.coffee.withOpacity(0.5),
-              ),
-            ),
-          ),
+
           Column(
             children: [
-              // Lista de mensagens
               Expanded(
                 child: ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16.0),
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
@@ -71,7 +191,33 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
               ),
-              // Campo de entrada de texto
+              if (_isLoading)
+                Padding(
+                  padding: const EdgeInsets.only(left: 24.0, bottom: 8.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 15,
+                          height: 15,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.brownie,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Assistente está digitando...',
+                          style: TextStyle(
+                            color: AppColors.brownie.withOpacity(0.8),
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               _buildTextInput(),
             ],
           ),
@@ -80,13 +226,13 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Widget para a bolha de mensagem
   Widget _buildMessageBubble(ChatMessage message) {
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5.0),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         decoration: BoxDecoration(
           color: message.isUser ? AppColors.caramel : Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -108,7 +254,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Widget para o campo de texto e botão de enviar
   Widget _buildTextInput() {
     return Padding(
       padding: const EdgeInsets.all(12.0),
@@ -117,6 +262,8 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: TextField(
               controller: _controller,
+              onSubmitted: (_) => _sendMessage(),
+              textInputAction: TextInputAction.send,
               decoration: InputDecoration(
                 hintText: 'Digite sua pergunta...',
                 filled: true,
@@ -131,7 +278,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           const SizedBox(width: 8),
           Material(
-            color: AppColors.brownie,
+            color: _isLoading ? Colors.grey : AppColors.brownie,
             borderRadius: BorderRadius.circular(30),
             child: InkWell(
               borderRadius: BorderRadius.circular(30),
@@ -148,3 +295,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
+
+
+
+
