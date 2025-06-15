@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-//import 'package:guidehogwarts/screens/menu_screen.dart';
+import 'package:guidehogwarts/screens/menu_screen.dart';
 import 'package:guidehogwarts/theme/app_colors.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -64,7 +64,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Spacer(flex: 2),
+                  const Spacer(flex: 5),
                   // Título estilizado
                   const Text(
                     'Hogwarts',
@@ -99,16 +99,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                     scale: _scaleAnimation,
                     child: GestureDetector(
                       onTap: () {
-                        //Navigator.pushReplacement(
-                          //context,
-                          //PageRouteBuilder(
-                            //pageBuilder: (context, animation, secondaryAnimation) => const MenuScreen(),
-                            //transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                              //return FadeTransition(opacity: animation, child: child);
-                            //},
-                            //transitionDuration: const Duration(milliseconds: 800),
-                          //),
-                        //);
+                        Navigator.pushReplacement(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) => const MenuScreen(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(opacity: animation, child: child);
+                            },
+                            transitionDuration: const Duration(milliseconds: 800),
+                          ),
+                        );
                       },
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(30),
