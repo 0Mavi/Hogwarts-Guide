@@ -80,6 +80,7 @@ lib/
 
 - Design e Desenvolvimento: **Maria Vitória** e **Pedro Henrique**
 - API do Chat: [DumbleChat API](https://dumblechatapi.onrender.com)
+- Documentação: [Documentação Hogwarts Guide](https://drive.google.com/drive/folders/1e-GWwmxwG3iQBwUzlbwhAwifoDJ-sYYF?usp=sharing)
 
 ---
 
